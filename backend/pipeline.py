@@ -1,34 +1,33 @@
-import torch
-from transformers import pipeline
 import os
 import subprocess
-# import json
+from typing import List, Optional, Dict, Any
+
+import torch
+from transformers import pipeline
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
 import redis
 from redis.commands.search.field import VectorField, TextField, TagField
 from redis.commands.search.index_definition import IndexDefinition, IndexType
 from redis.commands.search.query import Query
-import numpy as np
+
 
 input_file = "reels.txt"
 audio_folder = "audio"
 device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
 # --- Connect to Redis Cloud ---
-# Replace with your actual Redis Insight credentials
 r = redis.Redis(
     host='redis-16856.crce179.ap-south-1-1.ec2.cloud.redislabs.com',
     port=16856,
     password='kzbxcgxZShRWM5ucXKAXAp75QQtp1t3x',
-    decode_responses=True # Important for reading text
+    decode_responses=True
 )
 
 INDEX_NAME = "idx:reels"
 PREFIX = "reel:"
 
-# 1. Initialize Models
+# Initialize models once
 pipe = pipeline(
     "automatic-speech-recognition",
     model="openai/whisper-tiny",
@@ -38,12 +37,13 @@ pipe = pipeline(
 )
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def create_index():
+
+def create_index() -> None:
     try:
         r.ft(INDEX_NAME).info()
-    except:
+    except Exception:
         schema = (
-            TagField("user_id"), # TagField is optimized for exact matches like IDs
+            TagField("user_id"),
             TextField("url"),
             TextField("transcription"),
             VectorField("embedding", "HNSW", {
@@ -57,33 +57,39 @@ def create_index():
             definition=IndexDefinition(prefix=[PREFIX], index_type=IndexType.HASH)
         )
 
-def process_for_user(user_id):
-    with open("reels.txt", "r") as f:
-        urls = [line.strip() for line in f if line.strip()]
+
+def process_for_user(user_id: str, urls: Optional[List[str]] = None) -> Dict[str, Any]:
+    """Process reel URLs for a given user_id.
+
+    If `urls` is None, reads from `reels.txt` in the project root.
+    Returns a simple report dict with processed and errors.
+    """
+    if urls is None:
+        if not os.path.exists(input_file):
+            return {"processed": [], "errors": [f"{input_file} not found"]}
+        with open(input_file, "r", encoding="utf-8") as f:
+            urls = [line.strip() for line in f if line.strip()]
+
+    processed = []
+    errors = []
 
     for url in urls:
-        # Check if THIS user has already processed THIS url
-        # Query: @user_id:{123} @url:"https://..."
         query_str = f"@user_id:{{{user_id}}} @url:\"{url}\""
         existing = r.ft(INDEX_NAME).search(Query(query_str)).docs
-        
         if existing:
-            print(f"Skipping: User {user_id} already indexed {url}")
+            # already indexed for this user
             continue
 
         try:
-            # 1. Download
             get_id_cmd = ["yt-dlp", "--get-id", "--cookies", "cookies.txt", url]
             video_id = subprocess.check_output(get_id_cmd, text=True).strip()
             temp_path = os.path.join(audio_folder, f"{video_id}.mp3")
 
             subprocess.run(["yt-dlp", "-x", "--audio-format", "mp3", "-o", temp_path, url], check=True)
 
-            # 2. Transcribe & Embed
             text = pipe(temp_path)["text"]
             vector = model.encode(text).astype(np.float32).tobytes()
 
-            # 3. Store in Redis with user_id
             r.hset(f"reel:{user_id}:{video_id}", mapping={
                 "user_id": user_id,
                 "url": url,
@@ -91,60 +97,35 @@ def process_for_user(user_id):
                 "embedding": vector
             })
 
-            # 4. CLEANUP: Delete the mp3 file immediately
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-                print(f"Temporary file {temp_path} deleted.")
+
+            processed.append({"video_id": video_id, "url": url})
 
         except Exception as e:
-            print(f"Error processing {url}: {e}")
+            errors.append({"url": url, "error": str(e)})
 
-# def search_redis(query_text, top_k=3):
-#     # 1. Embed the query
-#     query_vector = model.encode(query_text).astype(np.float32).tobytes()
+    return {"processed": processed, "errors": errors}
 
-#     # 2. Build the query
-#     # (*) means search all docs; =>[KNN...] finds nearest vectors
-#     q = Query(f"(*)=>[KNN {top_k} @embedding $vec AS score]") \
-#         .sort_by("score") \
-#         .return_fields("url", "transcription", "score") \
-#         .dialect(2)
 
-#     params = {"vec": query_vector}
-    
-#     results = r.ft(INDEX_NAME).search(q, params)
+def search_user_reels(user_id: str, query_text: str, top_k: int = 3) -> List[Dict[str, Any]]:
+    """Search user-specific reels using hybrid Redis vector search.
 
-#     print(f"\nResults for: {query_text}")
-#     for doc in results.docs:
-#         print(f"Score: {doc.score}")
-#         print(f"URL: {doc.url}")
-#         print(f"Text: {doc.transcription[:100]}...\n")
-def search_user_reels(user_id, query_text, top_k=3):
+    Returns a list of result dicts with `score`, `url`, and `transcription`.
+    """
     query_vector = model.encode(query_text).astype(np.float32).tobytes()
 
-    # Hybrid Query: Filter by user_id TAG, then perform Vector Search
     sql_query = f"@user_id:{{{user_id}}}=>[KNN {top_k} @embedding $vec AS score]"
-    
-    q = Query(sql_query) \
-        .sort_by("score") \
-        .return_fields("url", "transcription", "score") \
-        .dialect(2)
+    q = Query(sql_query).sort_by("score").return_fields("url", "transcription", "score").dialect(2)
 
     results = r.ft(INDEX_NAME).search(q, {"vec": query_vector})
-    # return results.docs
-    print(f"\nResults for: {query_text}")
+
+    out = []
     for doc in results.docs:
-        print(f"Score: {doc.score}")
-        print(f"URL: {doc.url}")
-        print(f"Text: {doc.transcription[:100]}...\n")
+        out.append({
+            "score": float(doc.score),
+            "url": doc.url,
+            "transcription": doc.transcription
+        })
 
-if __name__ == "__main__":
-    create_index()
-    userid="dummy"
-    process_for_user(userid)
-
-    while True:
-        user_query = input("\nEnter search query (or 'exit' to quit): ")
-        if user_query.lower() == 'exit':
-            break
-        search_user_reels(userid,user_query)
+    return out

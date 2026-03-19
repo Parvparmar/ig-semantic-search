@@ -27,7 +27,7 @@ if (newLinks.length > 0) {
     const blob = new Blob([newLinks.join('\n')], { type: 'text/plain' });
     const element = document.createElement('a');
     element.href = URL.createObjectURL(blob);
-    element.download = `reelsjs.txt`;
+    element.download = 'reelsjs.txt';
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
