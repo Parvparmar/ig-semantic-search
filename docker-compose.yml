@@ -1,0 +1,39 @@
+version: "3.9"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      # For GPU support, uncomment below and edit Dockerfile to use CUDA base image:
+      # args:
+      #   - BUILDKIT_INLINE_CACHE=1
+    image: reelsearch-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    volumes:
+      # Mount cookies file for Instagram auth
+      - ./backend/cookies.txt:/app/cookies.txt:ro
+    restart: unless-stopped
+    # GPU support — uncomment if you have an NVIDIA GPU + nvidia-container-toolkit:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    env_file:
+      - ./frontend/.env
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    restart: unless-stopped

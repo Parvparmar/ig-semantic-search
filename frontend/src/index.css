@@ -1,0 +1,39 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --ink:     #0e0d0b;
+  --paper:   #f5f2ec;
+  --cream:   #ede9e0;
+  --accent:  #e8500a;   /* burnt orange — Instagram-adjacent but not Instagram */
+  --muted:   #7a7570;
+  --border:  #d4cfc6;
+  --success: #1a7a4a;
+  --error:   #c0392b;
+  --radius:  4px;
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'Instrument Sans', sans-serif;
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Scrollbar ───────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--cream); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); border: 0;
+}
