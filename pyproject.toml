@@ -1,2 +1,19 @@
+[project]
+name = "wheresthatreel"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+	"fastapi",
+	"numpy",
+	"python-multipart",
+	"redis",
+	"scikit-learn",
+	"sentence-transformers",
+	"torch",
+	"transformers",
+	"uvicorn[standard]",
+	"yt-dlp",
+]
+
 [tool.vercel]
 entrypoint = "backend.main:app"
