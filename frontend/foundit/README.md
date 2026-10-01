@@ -68,3 +68,13 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 ### `npm run build` fails to minify
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+
+## Vercel and the local API
+
+The deployed frontend cannot call `localhost` on your computer. Run the FastAPI backend on your laptop and expose port 8000 through an HTTPS tunnel (for example, Cloudflare Tunnel), or deploy the backend to a public host. Set `REACT_APP_API_URL` in the Vercel project's environment variables to that public HTTPS base URL, without a trailing slash, then redeploy. For a local frontend, `npm start` uses `http://localhost:8000` by default.
+
+Set `FRONTEND_ORIGINS` in the backend environment to the exact deployed frontend origin, such as `https://your-app.vercel.app`, so FastAPI's CORS policy allows browser requests. Keep the tunnel running while using the deployed app; a temporary tunnel URL changes when it restarts, so update the Vercel variable and redeploy when that happens.
+
+## Local accounts and library data
+
+Accounts are created and verified in the browser. Reel transcripts and embeddings are stored in IndexedDB on that device and browser profile; they are not uploaded as a shared account library and are not available on another device. Clearing the browser's site data removes them. Passwords are stored as salted hashes, but this is device-local account separation, not a server-backed identity or encrypted-at-rest storage system.

@@ -30,3 +30,20 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .processing-dot { animation: pulse 1.1s ease-in-out infinite; background: #0095f6; border-radius: 50%; display: inline-block; height: 7px; margin-right: 7px; width: 7px; }
 @keyframes pulse { 50% { opacity: .35; } }
 @media (max-width: 760px) { .topbar { padding: 0 18px; }.workspace { padding: 42px 18px 60px; }.library-head { align-items: flex-start; flex-direction: column; margin-bottom: 30px; }.library-head h1 { letter-spacing: -2px; }.reel-grid { grid-template-columns: 1fr; }.search-bar kbd { display: none; }.drawer { padding: 30px 22px; }.topnav { gap: 14px; } }
+.auth-shell { align-items: center; background: radial-gradient(ellipse at 75% 15%, rgba(0,149,246,.09), transparent 36%), linear-gradient(135deg, #fafafa 0%, #f1f4f5 100%); display: flex; justify-content: center; min-height: 100vh; padding: 28px; }
+.auth-panel { background: rgba(255,255,255,.92); border: 1px solid #e7e7e7; box-shadow: 0 24px 70px rgba(17,17,17,.08); max-width: 440px; padding: 42px; width: 100%; }
+.auth-panel > .brand { margin-bottom: 58px; }
+.auth-panel > .eyebrow { margin-bottom: 11px; }
+.auth-panel h1 { font-size: 38px; letter-spacing: -1.6px; line-height: 1.05; margin: 0; }
+.auth-copy { color: #737373; font-size: 14px; line-height: 1.6; margin: 14px 0 30px; }
+.auth-form label { display: block; font-size: 12px; font-weight: 700; margin: 0 0 8px; }
+.auth-form input { border: 1px solid #d9d9d9; border-radius: 4px; display: block; margin-bottom: 19px; outline: 0; padding: 13px; width: 100%; }
+.auth-form input:focus { border-color: #888; }
+.auth-form .primary-button { margin-top: 8px; }
+.auth-hint { color: #777; font-size: 11px; line-height: 1.5; margin: -9px 0 18px; }
+.auth-error { background: #fff5f3; border: 1px solid #f0c9c2; color: #a42b1b; font-size: 12px; line-height: 1.5; margin: 0 0 16px; padding: 10px 12px; }
+.auth-switch { background: none; border: 0; color: #555; cursor: pointer; display: block; font-size: 12px; margin: 20px auto 0; padding: 5px; text-decoration: underline; text-underline-offset: 3px; }
+.account-name { color: #666; font-size: 12px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+.signout-button { background: none; border: 0; color: #555; cursor: pointer; font-size: 12px; font-weight: 600; padding: 7px 0; }
+.signout-button:hover { color: #111; }
+@media (max-width: 520px) { .auth-shell { padding: 16px; }.auth-panel { padding: 30px 24px; }.auth-panel > .brand { margin-bottom: 46px; }.auth-panel h1 { font-size: 33px; }.topnav { gap: 10px; }.account-name { max-width: 86px; } }

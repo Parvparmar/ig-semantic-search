@@ -1,4 +1,5 @@
 {
+  "framework": "create-react-app",
   "buildCommand": "npm --prefix frontend/foundit run build",
   "outputDirectory": "frontend/foundit/build",
   "installCommand": "npm --prefix frontend/foundit ci"
