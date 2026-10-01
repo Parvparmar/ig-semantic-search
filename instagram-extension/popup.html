@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reel Library Capture</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main>
+      <h1>Reel Library</h1>
+      <p>Index reels when you like or save them on Instagram Web.</p>
+      <label for="api-url">Backend URL</label>
+      <input id="api-url" type="url" placeholder="https://your-api.example.com" required>
+      <label for="app-url">Library app URL</label>
+      <input id="app-url" type="url" placeholder="https://your-app.vercel.app" required>
+      <button id="save" type="button">Save settings</button>
+      <button id="sync" type="button">Sync waiting reels</button>
+      <output id="status" aria-live="polite"></output>
+      <output id="counts" aria-live="polite"></output>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

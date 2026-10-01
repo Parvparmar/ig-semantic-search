@@ -1,0 +1,11 @@
+* { box-sizing: border-box; }
+body { background: #f5f7f7; color: #171717; font: 14px/1.45 system-ui, sans-serif; margin: 0; width: 320px; }
+main { padding: 20px; }
+h1 { font-size: 20px; margin: 0; }
+p { color: #666; font-size: 12px; margin: 7px 0 18px; }
+label { display: block; font-size: 12px; font-weight: 700; margin: 0 0 6px; }
+input { border: 1px solid #ccc; border-radius: 4px; font: inherit; margin-bottom: 14px; outline: 0; padding: 9px; width: 100%; }
+input:focus { border-color: #2785a8; }
+button { background: #171717; border: 0; margin-top:2px; border-radius: 4px; color: #fff; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 12px; width: 100%; }
+output { color: #386b48; display: block; font-size: 12px; min-height: 18px; padding-top: 9px; }
+#counts { border-top: 1px solid #ddd; color: #555; margin-top: 8px; padding-top: 12px; }

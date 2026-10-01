@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import threading
+import time
 import uuid
 from pathlib import Path
 from typing import Any
@@ -75,6 +76,8 @@ def save_data(data: list[dict[str, Any]]) -> None:
 
 
 def update_job(job_id: str, **values: Any) -> None:
+	if "status" in values and "stage_started_at" not in values:
+		values["stage_started_at"] = time.monotonic()
 	jobs[job_id] = {**jobs.get(job_id, {}), **values}
 
 
@@ -111,8 +114,11 @@ def process_index_job(job_id: str, url: str) -> None:
 		if not audio_file.exists():
 			raise RuntimeError("Audio extraction did not produce an MP3 file.")
 
+		update_job(job_id, status="Loading Whisper model", progress=45)
+		transcriber = get_speech_pipeline()
+
 		update_job(job_id, status="Transcribing audio", progress=58)
-		transcription = get_speech_pipeline()(str(audio_file))["text"].strip()
+		transcription = transcriber(str(audio_file))["text"].strip()
 		if not transcription:
 			raise RuntimeError("Whisper returned an empty transcription.")
 
@@ -146,7 +152,11 @@ def index_status(job_id: str) -> dict[str, Any]:
 	job = jobs.get(job_id)
 	if job is None:
 		raise HTTPException(status_code=404, detail="Indexing job not found.")
-	return job
+	result = dict(job)
+	stage_started_at = result.pop("stage_started_at", None)
+	if stage_started_at is not None and not result.get("complete"):
+		result["elapsed_seconds"] = int(time.monotonic() - stage_started_at)
+	return result
 
 
 @app.post("/embed")

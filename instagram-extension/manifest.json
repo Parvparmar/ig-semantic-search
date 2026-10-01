@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Reel Library Instagram Capture",
+  "version": "1.0.0",
+  "description": "Index Instagram reels when you like or save them on the web.",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": ["https://www.instagram.com/*", "https://instagram.com/*"],
+  "optional_host_permissions": ["https://*/*", "http://localhost/*", "http://127.0.0.1/*"],
+  "background": { "service_worker": "background.js" },
+  "action": { "default_popup": "popup.html", "default_title": "Reel Library capture settings" },
+  "content_scripts": [
+    {
+      "matches": ["https://www.instagram.com/*", "https://instagram.com/*"],
+      "js": ["instagram-main.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["https://www.instagram.com/*", "https://instagram.com/*"],
+      "js": ["instagram.js"],
+      "run_at": "document_start",
+      "world": "ISOLATED"
+    }
+  ]
+}

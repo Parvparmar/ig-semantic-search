@@ -46,6 +46,27 @@ function App() {
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   useEffect(() => {
+    const handleExtensionMessage = (event) => {
+      if (event.source !== window || event.origin !== window.location.origin) return;
+      if (event.data?.source !== 'wtr-instagram-extension' || event.data.type !== 'INDEX_COMPLETE' || !event.data.item) return;
+      if (!username) return;
+
+      const item = { ...event.data.item, processing: false, progress: 100, status: 'Indexed' };
+      saveReel(username, item)
+        .then(() => {
+          setItems((current) => [item, ...current.filter((savedItem) => savedItem.url !== item.url)]);
+          window.postMessage({ source: 'wtr-reel-library', type: 'ACK_COMPLETED', url: item.url }, window.location.origin);
+          setNotice('Instagram reel indexed and saved to this device.');
+        })
+        .catch(() => setNotice('Could not save the Instagram reel to this device.'));
+    };
+
+    window.addEventListener('message', handleExtensionMessage);
+    window.postMessage({ source: 'wtr-reel-library', type: 'GET_COMPLETED' }, window.location.origin);
+    return () => window.removeEventListener('message', handleExtensionMessage);
+  }, [username]);
+
+  useEffect(() => {
     if (!username) {
       setHasLoaded(false);
       return;
@@ -262,7 +283,7 @@ function App() {
         <section className="auth-panel">
           <a className="brand" href="/" aria-label="Reel Library home"><span className="brand-mark" aria-hidden="true">◎</span><span>Reel Library</span></a>
           <p className="eyebrow">Private to this browser</p>
-          <h1>{authMode === 'create' ? 'Create your library.' : 'Welcome back.'}</h1>
+          <h1>{authMode === 'create' ? 'Find stuff instantly.' : 'Welcome back.'}</h1>
           <p className="auth-copy">Your reel transcripts and embeddings stay in this browser on this device.</p>
           <form className="auth-form" onSubmit={authenticate}>
             <label htmlFor="account-name">Username</label>
@@ -288,7 +309,7 @@ function App() {
         <nav className="topnav" aria-label="Primary navigation"><span className="nav-active">Library</span><span className="account-name">{username}</span><button className="signout-button" type="button" onClick={signOut}>Sign out</button></nav>
       </header>
       <main className="workspace">
-        <section className="library-head"><div><p className="eyebrow">Private workspace</p><h1>Find yo shit.</h1><p className="subhead">Search across every reel you have indexed.</p></div><button className="primary-button" type="button" onClick={() => setShowIndexer(true)}><span aria-hidden="true">＋</span> Index new content</button></section>
+        <section className="library-head"><div><p className="eyebrow">Private workspace</p><h1>Find stuff instantly.</h1><p className="subhead">Search across every reel you have liked or saved.</p></div><button className="primary-button" type="button" onClick={() => setShowIndexer(true)}><span aria-hidden="true">＋</span> Index new content</button></section>
         <section className="search-bar" aria-label="Search library"><span className="search-icon" aria-hidden="true">⌕</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search sentences, topics, or even vibes" aria-label="Search transcripts, links, or moments" />{query && <button className="clear-button" onClick={() => setQuery('')} type="button">Clear</button>}<kbd>⌘ K</kbd></section>
         <div className="library-meta"><div><strong>{isSearching ? 'Searching semantically...' : query ? `${results.length} matches` : 'All indexed content'}</strong><span>{items.length} reels in this device’s library</span></div><span className="status"><i /> Semantic index</span></div>
         {notice && <div className="notice" role="status">{notice}<button onClick={() => setNotice('')} type="button">×</button></div>}
